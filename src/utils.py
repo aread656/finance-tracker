@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import random
 from transaction import Transaction
+from finance import Finance
 
 CATEGORY_MAP = {
     ("Salary and pension", "Salary / wages"): "Pay",
@@ -48,7 +49,7 @@ def generate_sample_income(n = 50):
     end_date = datetime.now()
     for i in range(n):
         category = random.choices(
-            population = income_categories,
+            population = Finance.income_categories,
             weights = [50, 20, 8, 2, 20],
             k = 1
         )[0]
@@ -85,7 +86,7 @@ def generate_sample_expenses(n = 150):
     end = datetime.now()
     for i in range(n):
         category = random.choices(
-            population = expense_categories,
+            population = Finance.expense_categories,
             weights = [5, 10, 30, 5, 10, 2, 15, 20],
             k = 1
         )[0]

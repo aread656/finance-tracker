@@ -56,8 +56,20 @@ class Finance:
         return
     def editTransaction(self):
         return
+    def saveToCSV(self):
+        with open(file = self.filename, mode = "w", encoding = "cp1252",newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["id","date","type","category","amount","description"])
+            for t in self.transactions:
+                writer.writerow([
+                    t.id,t.date,
+                    "Income" if t.type else "Expense",
+                    t.category,t.amount,t.description
+                ])
     
 if __name__ == "__main__":
     f = Finance()
     f.transactions = f.readCSV("data/StatementJul25-Apr26.csv")
+    f.transactions = removeUnwantedRows(f)
     f.listTransactions()
+    f.saveToCSV()
