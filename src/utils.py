@@ -1,42 +1,42 @@
 from datetime import datetime, timedelta
-import csv
 import random
 from transaction import Transaction
 
-income_categories = ["Pay", "Gift", "Dividend", "Loans", "Misc"]
-expense_categories = ["Bills", "Fuel", "Groceries", "Clothing", "Charity", "Emergency", "Leisure", "Misc"]
+CATEGORY_MAP = {
+    ("Salary and pension", "Salary / wages"): "Pay",
+    ("Salary and pension","Student loan"):"Loans",
+    ("Pension, savings and investment","Savings"):"Savings",
 
-CATEGORY_MAP = {("Salary and pension", "Salary / wages"): "Pay",
-        ("Other income", "Own account transfer"): "Loans",
-        ("Other income", "Other transfers"): "Gift",
-        
-        ("Transport", "Fuel"): "Fuel",
-        ("Transport", "Bus / train"): "Bills",
-        ("Transport", "Plane"): "Leisure",
-        ("Transport", "Parking"): "Bills",
+    ("Household goods","Supermarket"):"Groceries",
+    ("Household goods","Other"):"Groceries",
 
-        ("Household goods", "Supermarket"): "Groceries",
-        ("Household goods", "Other"): "Groceries",
-        ("Household goods", None): "Groceries",
+    ("Transport", "Fuel"): "Transport",
+    ("Transport", "Bus / train"): "Transport",
+    ("Transport", "Plane"): "Leisure",
+    ("Transport", "Parking"): "Transport",
+    
+    ("Recreation and leisure", "Caf� / restaurant"): "Leisure",
+    ("Recreation and leisure", "Bar / nightclub"): "Leisure",
+    ("Recreation and leisure", "Cinema / concert / theatre"): "Leisure",
+    ("Recreation and leisure", "Holiday"): "Leisure",
+    ("Recreation and leisure", "Games / toys"): "Leisure",
+    
+    ("Uncategorised","Uncategorised"):"Misc",
+    
+    ("Recreation and leisure","Other"):"Leisure",
+    
+    ("Housing", "Maintenance"): "Bills",
+    ("Housing", "Other"): "Bills",
 
-        ("Recreation and leisure", "Caf� / restaurant"): "Leisure",
-        ("Recreation and leisure", "Bar / nightclub"): "Leisure",
-        ("Recreation and leisure", "Cinema / concert / theatre"): "Leisure",
-        ("Recreation and leisure", "Holiday"): "Leisure",
-        ("Recreation and leisure", "Games / toys"): "Leisure",
+    ("Clothing, shoes and personal care", "Clothing / shoes"): "Clothing",
+    ("Clothing, shoes and personal care", "Personal care"): "Clothing",
 
-        ("Other expenses", "Donations"): "Charity",
-        ("Other expenses", "Cash withdrawals"): "Misc",
-        ("Other expenses", "Own account transfer"): "Misc",
-
-        ("Clothing, shoes and personal care", "Clothing / shoes"): "Clothing",
-        ("Clothing, shoes and personal care", "Personal care"): "Clothing",
-
-        ("Housing", "Maintenance"): "Bills",
-        ("Housing", "Other"): "Bills",
-
-        ("Uncategorised", "Uncategorised"): "Misc",
-    }
+    ("Other income","Own account transfer"):"Transfer",
+    ("Other income","Other transfers"):"Misc",
+    ("Other expenses","Fees"):"Misc",
+    ("Other expenses", "Donations"): "Charity",
+    ("Other expenses", "Cash withdrawals"): "Misc",
+}
 
 def random_dates(start, end):
     delta = end - start
@@ -124,47 +124,3 @@ def generate_sample_expenses(n = 150):
         )
         transactions.append(new_trans)
     return transactions
-
-def CSVStatementConverter(filename):
-    output_rows = []
-    with open(file = filename, mode = "r", encoding = "cp1252", newline = "") as f:
-        reader = csv.DictReader(f)
-        for line in reader:
-            #remove unecessary categories
-            line.pop("Reconciled", None)
-            line.pop("Status", None)
-            line.pop("Balance", None)
-
-            #create is_income attribute for each row
-            amount_str = line["Amount"].replace(",", "").strip()
-            line["is_income"] = float(amount_str) > 0
-            line["Amount"] = abs(float(amount_str))
-
-            #adjust categories to match above categories
-            category_key = (line.get("Category"), line.get("Subcategory"))
-            mapped = CATEGORY_MAP.get(category_key)
-
-            if not mapped:
-                line["Category"] = "Misc"
-            else:
-                line["Category"] = mapped
-            
-            line.pop("Subcategory", None)
-
-            #adjust dates into YYYY/MM/DD format
-            dt = datetime.strptime(line["Date"], "%m/%d/%Y")
-            line["Date"] = dt.strftime("%Y-%m-%d")
-
-            #some descriptions have ))))), this removes them
-            line["Text"] = line["Text"].replace(")", "").strip()
-
-            #create transaction objects for each line
-            new_trans = Transaction(
-                category = line["Category"], 
-                date = line["Date"], 
-                amount = line["Amount"], 
-                desc = line["Text"], 
-                is_income = line["is_income"]
-            )
-            output_rows.append(new_trans)
-    return output_rows
